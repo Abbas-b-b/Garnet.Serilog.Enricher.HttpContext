@@ -51,7 +51,7 @@ app //IApplicantBuilder
 ```
 **The order of using middlewares is important to have proper log information. 
 For example if you have a middleware that produces custom responses on exception occurrence and you want to log the exact response,
-you should register the GarnetResponseBody middleware before that. [For more information](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware/)**
+you should register the GarnetResponseBody middleware before that. [More information](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/middleware/)**
 
 Now let ```Serilog``` to use Garnet enrichers all at once or one by one as you need.
 
