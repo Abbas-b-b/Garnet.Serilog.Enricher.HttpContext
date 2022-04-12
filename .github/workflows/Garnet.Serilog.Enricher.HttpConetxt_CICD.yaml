@@ -1,0 +1,17 @@
+name: 'Garnet.Serilog.Enricher.HttpConetxt_CICD'
+
+on:
+  push:
+    branches:
+    - 'master'
+    tags:
+    - '*.*.*'
+
+jobs:
+  pack_push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Pack and Push
+      uses: Abbas-b-b/Garnet.Github.Actions/dotnet_checkout_pack_push@master
+      with:
+        nuget-api-key: ${{ secrets.NUGET_API_KEY }} 
