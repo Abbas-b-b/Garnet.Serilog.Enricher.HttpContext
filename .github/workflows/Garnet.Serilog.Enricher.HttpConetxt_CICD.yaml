@@ -2,8 +2,6 @@ name: 'Garnet.Serilog.Enricher.HttpConetxt_CICD'
 
 on:
   push:
-    branches:
-    - 'master'
     tags:
     - '*.*.*'
 
