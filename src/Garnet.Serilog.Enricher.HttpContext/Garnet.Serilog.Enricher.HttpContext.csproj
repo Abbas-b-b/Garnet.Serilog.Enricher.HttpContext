@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    
+    <PackageId>Garnet.Serilog.Enricher.HttpContext</PackageId>
+    <Authors>Garnet</Authors>
+    <Company>Garnet</Company>
+    <PackageProjectUrl>https://github.com/Abbas-b-b/Garnet.Serilog.Enricher.HttpContext</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Abbas-b-b/Garnet.Serilog.Enricher.HttpContext.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <Title>Garnet.Serilog.Enricher.HttpContext</Title>
+    <Description>Enrich Serilog events with infromation from HttpContext like request, response, header, etc.</Description>
+    <PackageTags>dotnet;.net;serilog;enricher;httpcontext</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <Copyright>Copyright © Garnet</Copyright>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="2.10.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="4.2.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
+    <PackageReference Include="MinVer" Version="3.1.0">
+      <PrivateAssets>All</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
