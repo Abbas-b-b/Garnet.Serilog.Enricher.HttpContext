@@ -18,12 +18,17 @@
     <Deterministic>true</Deterministic>
     <Title>Garnet.Serilog.Enricher.HttpContext</Title>
     <Description>Enrich Serilog events with infromation from HttpContext like request, response, header, etc.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>dotnet;.net;serilog;enricher;httpcontext</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <Copyright>Copyright © Garnet</Copyright>
   </PropertyGroup>
   
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.0" />
