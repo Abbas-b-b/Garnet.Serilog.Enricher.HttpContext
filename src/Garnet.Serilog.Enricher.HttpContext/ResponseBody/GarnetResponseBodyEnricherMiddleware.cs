@@ -30,6 +30,13 @@ internal class GarnetResponseBodyEnricherMiddleware
     /// <param name="httpContext"><see cref="HttpContext"/></param>
     public async Task InvokeAsync(Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
+        if (httpContext.Request.ContentType.Equals("application/grpc", StringComparison.InvariantCultureIgnoreCase))
+        {
+            await _next(httpContext);
+            return;
+        }
+
+        Exception exception = null;
         var originalBody = httpContext.Response.Body;
 
         try
@@ -42,9 +49,9 @@ internal class GarnetResponseBodyEnricherMiddleware
             {
                 await _next(httpContext);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // ignored
+                exception = e;
             }
 
             memoryStream.Position = 0;
@@ -60,6 +67,11 @@ internal class GarnetResponseBodyEnricherMiddleware
         finally
         {
             httpContext.Response.Body = originalBody;
+        }
+
+        if (exception is not null)
+        {
+            throw exception;
         }
     }
 }
