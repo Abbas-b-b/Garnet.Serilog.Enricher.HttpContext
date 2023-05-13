@@ -23,6 +23,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
     <Copyright>Copyright © Garnet</Copyright>
+
+    <MinVerTagPrefix>v</MinVerTagPrefix>
   </PropertyGroup>
   
   <ItemGroup>
