@@ -30,7 +30,8 @@ internal class GarnetResponseBodyEnricherMiddleware
     /// <param name="httpContext"><see cref="HttpContext"/></param>
     public async Task InvokeAsync(Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
-        if (httpContext.Request.ContentType.Equals("application/grpc", StringComparison.InvariantCultureIgnoreCase))
+        if (httpContext?.Request?.ContentType is not null
+            && httpContext.Request.ContentType.Equals("application/grpc", StringComparison.InvariantCultureIgnoreCase))
         {
             await _next(httpContext);
             return;
