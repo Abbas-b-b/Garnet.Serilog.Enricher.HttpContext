@@ -1,10 +1,10 @@
+using Garnet.Serilog.Enricher.HttpContext.Configuration;
 using Garnet.Serilog.Enricher.HttpContext.RequestBody;
 using Garnet.Serilog.Enricher.HttpContext.RequestHeaders;
 using Garnet.Serilog.Enricher.HttpContext.RequestUrl;
 using Garnet.Serilog.Enricher.HttpContext.ResponseBody;
 using Garnet.Serilog.Enricher.HttpContext.ResponseHeaders;
 using Garnet.Serilog.Enricher.HttpContext.UserClaims;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Garnet.Serilog.Enricher.HttpContext;
@@ -18,57 +18,22 @@ public static class GarnetHttpContextEnricherDependencyInjection
     /// Register all Garnet HttpContext enrichers requirements to the service collection
     /// </summary>
     /// <param name="serviceCollection">To register requirements to</param>
-    /// <param name="configuration">To load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> with <paramref name="configurationPath"/></param>
-    /// <param name="configurationPath">Path to load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> from <paramref name="configuration"/></param>
-    /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
-    public static IServiceCollection AddAllGarnetHttpContextEnrichers(this IServiceCollection serviceCollection,
-        IConfiguration configuration,
-        string configurationPath = "Garnet.Serilog.Enricher.HttpContext")
-    {
-        return serviceCollection
-            .AddGarnetRequestBodyEnricher(configuration, configurationPath)
-            .AddGarnetRequestHeadersEnricher(configuration, configurationPath)
-            .AddGarnetRequestUrlEnricher(configuration, configurationPath)
-            .AddGarnetResponseBodyEnricher(configuration, configurationPath)
-            .AddGarnetResponseHeadersEnricher(configuration, configurationPath)
-            .AddGarnetUserClaimsEnricher(configuration, configurationPath);
-    }
-
-    /// <summary>
-    /// Register all Garnet HttpContext enrichers requirements to the service collection
-    /// </summary>
-    /// <param name="serviceCollection">To register requirements to</param>
     /// <param name="propertyNameConfig">Configuration used for log event property name. Using default value if pass null</param>
+    /// <param name="configuration">Configuration and limitations for enrichment</param>
     /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
     public static IServiceCollection AddAllGarnetHttpContextEnrichers(this IServiceCollection serviceCollection,
-        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null)
+        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null,
+        GarnetHttpContextEnrichmentConfiguration configuration = null)
     {
+        configuration ??= new GarnetHttpContextEnrichmentConfiguration();
+        
         return serviceCollection
-            .AddGarnetRequestBodyEnricher(propertyNameConfig)
-            .AddGarnetRequestHeadersEnricher(propertyNameConfig)
-            .AddGarnetRequestUrlEnricher(propertyNameConfig)
-            .AddGarnetResponseBodyEnricher(propertyNameConfig)
-            .AddGarnetResponseHeadersEnricher(propertyNameConfig)
-            .AddGarnetUserClaimsEnricher(propertyNameConfig);
-    }
-
-    /// <summary>
-    /// Boilerplate code for registering Garnet HttpContext enrichers requirements to the service collection
-    /// </summary>
-    /// <param name="serviceCollection">To register requirements to</param>
-    /// <param name="configuration">To load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> with <paramref name="configurationPath"/></param>
-    /// <param name="configurationPath">Path to load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> from <paramref name="configuration"/></param>
-    /// <typeparam name="TEnricher">Type of Garnet HttpContext enricher to register</typeparam>
-    /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
-    internal static IServiceCollection AddGarnetHttpContextEnricher<TEnricher>(this IServiceCollection serviceCollection,
-        IConfiguration configuration,
-        string configurationPath = "Garnet.Serilog.Enricher.HttpContext")
-        where TEnricher : GarnetHttpContextEnricherBase
-    {
-        var propertyNameConfig =
-            configuration.GetValue<GarnetHttpContextEnricherPropertyNameConfig>($"{configurationPath}");
-
-        return serviceCollection.AddGarnetHttpContextEnricher<TEnricher>(propertyNameConfig);
+            .AddGarnetRequestBodyEnricher(propertyNameConfig, configuration)
+            .AddGarnetRequestHeadersEnricher(propertyNameConfig, configuration)
+            .AddGarnetRequestUrlEnricher(propertyNameConfig, configuration)
+            .AddGarnetResponseBodyEnricher(propertyNameConfig, configuration)
+            .AddGarnetResponseHeadersEnricher(propertyNameConfig, configuration)
+            .AddGarnetUserClaimsEnricher(propertyNameConfig, configuration);
     }
 
     /// <summary>
@@ -76,12 +41,15 @@ public static class GarnetHttpContextEnricherDependencyInjection
     /// </summary>
     /// <param name="serviceCollection">To register requirements to</param>
     /// <param name="propertyNameConfig">Configuration used for log event property name. Using default value if pass null</param>
+    /// <param name="configuration">Configuration and limitations for enrichment</param>
     /// <typeparam name="TEnricher">Type of Garnet HttpContext enricher to register</typeparam>
     /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
     internal static IServiceCollection AddGarnetHttpContextEnricher<TEnricher>(this IServiceCollection serviceCollection,
-        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null)
+        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig,
+        GarnetHttpContextEnrichmentConfiguration configuration = null)
         where TEnricher : GarnetHttpContextEnricherBase
     {
+        GarnetConfigProvider.AddConfiguration<TEnricher>(configuration ?? new GarnetHttpContextEnrichmentConfiguration());
         serviceCollection.AddSingleton(propertyNameConfig ?? new GarnetHttpContextEnricherPropertyNameConfig());
         serviceCollection.AddSingleton<TEnricher>();
 

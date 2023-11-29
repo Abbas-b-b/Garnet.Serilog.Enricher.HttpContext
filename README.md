@@ -1,6 +1,6 @@
 # Garnet Serilog HttpContext Enricher [![Nuget](https://img.shields.io/nuget/vpre/Garnet.Serilog.Enricher.HttpContext?style=for-the-badge)](https://www.nuget.org/packages/Garnet.Serilog.Enricher.HttpContext/) [![Nuget](https://img.shields.io/nuget/dt/Garnet.Serilog.Enricher.HttpContext?style=for-the-badge)](https://www.nuget.org/packages/Garnet.Serilog.Enricher.HttpContext/)
 
-Serilog comprehensive HttpContext enrichers like request body, response body, request and response headers, user claims, ...
+Serilog comprehensive HttpContext enrichers like request body, response body, request and response headers, user claims, ... with filter and redaction support
 
 ---
 
@@ -95,4 +95,28 @@ You can use custom enrichers to add more information to ```LogEvent``` from ```H
     serviceProvider,
     httpContext => httpContext.Request.Method)); //<--- provide result
 ...;
+```
+
+## Redaction and Filter
+Redaction can be applied to the Request or Response content for request to predefined URLs or all. For now it only redact fields of content in `Json` or `form-urlencoded` format.
+
+Every enrichment can be filtered for every request by using `HttpContext`.
+
+```C#
+serviceCollection.AddAllGarnetHttpContextEnrichers(configuration: new GarnetHttpContextEnrichmentConfiguration)
+{
+    //Ignore enrichment on request to swagger
+    RequestFilter = context =>
+        !context.Request.Path.Value.Contains("swagger", StringComparison.InvariantCultureIgnoreCase),
+        
+    //Redact password field on login
+    Redactions = new List<Redaction>
+    {
+        new()
+        {
+            Url = "connect/token",
+            Fields = new List<string> { "password" },
+        }
+    }
+});
 ```

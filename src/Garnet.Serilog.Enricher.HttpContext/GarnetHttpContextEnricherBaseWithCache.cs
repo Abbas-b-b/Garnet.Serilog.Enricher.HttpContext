@@ -35,15 +35,20 @@ public abstract class GarnetHttpContextEnricherBaseWithCache : GarnetHttpContext
     /// <param name="propertyFactory">Factory for creating new properties to add to the event.</param>
     public override void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        if (HttpContextAccessor?.HttpContext is null)
+        var httpContext = HttpContextAccessor?.HttpContext;
+        
+        if (httpContext is null)
         {
             return;
         }
 
-        var httpContext = HttpContextAccessor.HttpContext;
-
         if (!httpContext.Items.TryGetValue(CacheKey, out var logData))
         {
+            if (ShouldSkipEnrichment(httpContext))
+            {
+                return;
+            }
+            
             logData = ProvideLogObject(httpContext);
 
             if (logData is null || logData is string stringData && string.IsNullOrEmpty(stringData))

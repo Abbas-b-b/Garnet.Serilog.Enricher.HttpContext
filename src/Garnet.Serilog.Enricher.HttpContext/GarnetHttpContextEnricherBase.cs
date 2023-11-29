@@ -1,3 +1,4 @@
+using Garnet.Serilog.Enricher.HttpContext.Configuration;
 using Microsoft.AspNetCore.Http;
 using Serilog.Core;
 using Serilog.Events;
@@ -10,10 +11,13 @@ namespace Garnet.Serilog.Enricher.HttpContext;
 /// </summary>
 public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
 {
+    private GarnetHttpContextEnrichmentConfiguration _configuration;
+
     /// <summary>
     /// Log event property name
     /// </summary>
     protected readonly string PropertyKey;
+
     /// <summary>
     /// To access request HttpContext to retrieve needed information
     /// </summary>
@@ -32,6 +36,14 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
     }
 
     /// <summary>
+    /// Retrieve configuration for this Enricher
+    /// </summary>
+    protected GarnetHttpContextEnrichmentConfiguration Configuration
+    {
+        get { return _configuration ??= GarnetConfigProvider.GetConfiguration(this); }
+    }
+
+    /// <summary>
     /// Enrich <paramref name="logEvent"/> by calling <see cref="ProvideLogObject"/> method if HttpContext is not null.
     /// Null or empty string result of method <see cref="ProvideLogObject"/> will be ignored.
     /// </summary>
@@ -39,12 +51,12 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
     /// <param name="propertyFactory">Factory for creating new properties to add to the event.</param>
     public virtual void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
-        if (HttpContextAccessor?.HttpContext is null)
+        var httpContext = HttpContextAccessor?.HttpContext;
+
+        if (httpContext is null || ShouldSkipEnrichment(httpContext))
         {
             return;
         }
-
-        var httpContext = HttpContextAccessor.HttpContext;
 
         var logData = ProvideLogObject(httpContext);
 
@@ -54,6 +66,21 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
         }
 
         logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData));
+    }
+
+    /// <summary>
+    /// Check skip enrichment based on <see cref="GarnetHttpContextEnrichmentConfiguration.RequestFilter"/>
+    /// </summary>
+    /// <param name="httpContext">HttpContext to test the filter</param>
+    /// <returns>True if enrichment should be skipped otherwise False</returns>
+    protected virtual bool ShouldSkipEnrichment(Microsoft.AspNetCore.Http.HttpContext httpContext)
+    {
+        if (Configuration.RequestFilter is null)
+        {
+            return false;
+        }
+        
+        return !Configuration.RequestFilter(httpContext);
     }
 
     /// <summary>

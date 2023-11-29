@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace Garnet.Serilog.Enricher.HttpContext.RequestBody;
 
@@ -26,8 +27,8 @@ public class GarnetRequestBodyEnricher : GarnetHttpContextEnricherBaseWithCache
     /// <returns>Request body object or null if request has no body</returns>
     protected override object ProvideLogObject(Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
-        return httpContext.Items.TryGetValue(GarnetRequestBodyEnricherMiddleware.RequestBodyCacheKey, out var value)
-            ? value
+        return httpContext.Items.TryGetValue(GarnetHttpLoggingSink<object>.RequestBodyCacheKey, out var value)
+            ? Configuration.Redactions.Aggregate(value?.ToString(), (s, redaction) => redaction.Redact(s, httpContext))
             : null;
     }
 }

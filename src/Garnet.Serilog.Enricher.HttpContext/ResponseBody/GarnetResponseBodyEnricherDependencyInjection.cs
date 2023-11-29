@@ -1,6 +1,10 @@
+using Garnet.Serilog.Enricher.HttpContext.Configuration;
+using Garnet.Serilog.Enricher.HttpContext.Exceptions;
+using Garnet.Serilog.Enricher.HttpContext.RequestBody;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Garnet.Serilog.Enricher.HttpContext.ResponseBody;
 
@@ -9,31 +13,47 @@ namespace Garnet.Serilog.Enricher.HttpContext.ResponseBody;
 /// </summary>
 public static class GarnetResponseBodyEnricherDependencyInjection
 {
-    /// <summary>
-    /// Register <see cref="GarnetResponseBodyEnricher"/> requirements to the service collection
-    /// </summary>
-    /// <param name="serviceCollection">To register requirements to</param>
-    /// <param name="configuration">To load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> with <paramref name="configurationPath"/></param>
-    /// <param name="configurationPath">Path to load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> from <paramref name="configuration"/></param>
-    /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
-    public static IServiceCollection AddGarnetResponseBodyEnricher(this IServiceCollection serviceCollection,
-        IConfiguration configuration,
-        string configurationPath = "Garnet.Serilog.Enricher.HttpContext")
-    {
-        return serviceCollection.AddGarnetHttpContextEnricher<GarnetResponseBodyEnricher>(configuration,
-            configurationPath);
-    }
+    internal static bool Added;
+    internal static bool Used;
 
     /// <summary>
     /// Register <see cref="GarnetResponseBodyEnricher"/> requirements to the service collection
     /// </summary>
     /// <param name="serviceCollection">To register requirements to</param>
     /// <param name="propertyNameConfig">Configuration used for log event property name. Using default value if pass null</param>
+    /// <param name="configuration">Configuration and limitations for enrichment</param>
     /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
     public static IServiceCollection AddGarnetResponseBodyEnricher(this IServiceCollection serviceCollection,
-        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null)
+        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null,
+        GarnetHttpContextEnrichmentConfiguration configuration = null)
     {
-        return serviceCollection.AddGarnetHttpContextEnricher<GarnetResponseBodyEnricher>(propertyNameConfig);
+        configuration ??= new GarnetHttpContextEnrichmentConfiguration();
+
+        var loggingMiddleware = typeof(HttpLoggingOptions)
+            .Assembly
+            .GetType("Microsoft.AspNetCore.HttpLogging.HttpLoggingMiddleware");
+        if (loggingMiddleware is null)
+        {
+            throw new HttpLoggingMiddlewareNotFoundException();
+        }
+
+        serviceCollection.AddHttpLogging(options =>
+        {
+            options.RequestBodyLogLimit = configuration.RequestBodySizeLimitInBytes;
+            options.ResponseBodyLogLimit = configuration.ResponseBodySizeLimitInBytes;
+            options.LoggingFields = GarnetRequestBodyEnricherDependencyInjection.Added
+                ? HttpLoggingFields.RequestBody | HttpLoggingFields.ResponseBody
+                : HttpLoggingFields.ResponseBody;
+        });
+
+
+        var loggerService = typeof(ILogger<>).MakeGenericType(loggingMiddleware);
+        var loggerImpl = typeof(GarnetHttpLoggingSink<>).MakeGenericType(loggingMiddleware);
+        serviceCollection.AddSingleton(loggerService, loggerImpl);
+
+        Added = true;
+        
+        return serviceCollection.AddGarnetHttpContextEnricher<GarnetResponseBodyEnricher>(propertyNameConfig, configuration);
     }
 
     /// <summary>
@@ -45,6 +65,31 @@ public static class GarnetResponseBodyEnricherDependencyInjection
     public static IApplicationBuilder UseGarnetResponseBodyEnricherMiddleware(
         this IApplicationBuilder applicationBuilder)
     {
-        return applicationBuilder.UseMiddleware<GarnetResponseBodyEnricherMiddleware>();
+        var requestBodyEnricher = applicationBuilder.ApplicationServices.GetService<GarnetRequestBodyEnricher>();
+        var responseBodyEnricher = applicationBuilder.ApplicationServices.GetService<GarnetResponseBodyEnricher>();
+        var requestBodyConfiguration = GarnetConfigProvider.GetConfiguration(requestBodyEnricher);
+        var responseBodyConfiguration = GarnetConfigProvider.GetConfiguration(responseBodyEnricher);
+
+        if (GarnetRequestBodyEnricherDependencyInjection.Used && responseBodyConfiguration == requestBodyConfiguration)
+        {
+            return Return(applicationBuilder);
+        }
+
+        if (responseBodyConfiguration.RequestFilter is not null)
+        {
+            applicationBuilder.UseWhen(responseBodyConfiguration.RequestFilter, builder => builder.UseHttpLogging());
+        }
+        else
+        {
+            return Return(applicationBuilder.UseHttpLogging());
+        }
+
+        return Return(applicationBuilder);
+        
+        IApplicationBuilder Return(IApplicationBuilder appBuilder)
+        {
+            Used = true;
+            return appBuilder;
+        }
     }
 }

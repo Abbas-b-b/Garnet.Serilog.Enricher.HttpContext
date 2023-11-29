@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+using Garnet.Serilog.Enricher.HttpContext.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Garnet.Serilog.Enricher.HttpContext.RequestHeaders;
@@ -12,26 +12,14 @@ public static class GarnetRequestHeadersEnricherDependencyInjection
     /// Register <see cref="GarnetRequestHeadersEnricher"/> requirements to the service collection
     /// </summary>
     /// <param name="serviceCollection">To register requirements to</param>
-    /// <param name="configuration">To load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> with <paramref name="configurationPath"/></param>
-    /// <param name="configurationPath">Path to load <see cref="GarnetHttpContextEnricherPropertyNameConfig"/> from <paramref name="configuration"/></param>
-    /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
-    public static IServiceCollection AddGarnetRequestHeadersEnricher(this IServiceCollection serviceCollection,
-        IConfiguration configuration,
-        string configurationPath = "Garnet.Serilog.Enricher.HttpContext")
-    {
-        return serviceCollection.AddGarnetHttpContextEnricher<GarnetRequestHeadersEnricher>(configuration,
-            configurationPath);
-    }
-
-    /// <summary>
-    /// Register <see cref="GarnetRequestHeadersEnricher"/> requirements to the service collection
-    /// </summary>
-    /// <param name="serviceCollection">To register requirements to</param>
+    /// <param name="configuration">Configuration and limitations for enrichment</param>
     /// <param name="propertyNameConfig">Configuration used for log event property name. Using default value if pass null</param>
     /// <returns><paramref name="serviceCollection"/> after applying the configurations</returns>
     public static IServiceCollection AddGarnetRequestHeadersEnricher(this IServiceCollection serviceCollection,
-        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null)
+        GarnetHttpContextEnricherPropertyNameConfig propertyNameConfig = null,
+        GarnetHttpContextEnrichmentConfiguration configuration = null)
     {
-        return serviceCollection.AddGarnetHttpContextEnricher<GarnetRequestHeadersEnricher>(propertyNameConfig);
+        return serviceCollection.AddGarnetHttpContextEnricher<GarnetRequestHeadersEnricher>(propertyNameConfig,
+            configuration);
     }
 }
