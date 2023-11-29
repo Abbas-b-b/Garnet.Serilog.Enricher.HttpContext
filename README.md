@@ -103,7 +103,7 @@ Redaction can be applied to the Request or Response content for request to prede
 Every enrichment can be filtered for every request by using `HttpContext`.
 
 ```C#
-serviceCollection.AddAllGarnetHttpContextEnrichers(configuration: new GarnetHttpContextEnrichmentConfiguration)
+serviceCollection.AddAllGarnetHttpContextEnrichers(configuration: new GarnetHttpContextEnrichmentConfiguration
 {
     //Ignore enrichment on request to swagger
     RequestFilter = context =>
