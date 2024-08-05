@@ -59,6 +59,6 @@ public abstract class GarnetHttpContextEnricherBaseWithCache : GarnetHttpContext
             httpContext.Items.TryAdd(CacheKey, logData);
         }
 
-        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData));
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData, true));
     }
 }

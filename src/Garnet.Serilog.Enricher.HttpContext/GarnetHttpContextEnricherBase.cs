@@ -65,7 +65,7 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
             return;
         }
 
-        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData));
+        logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData, true));
     }
 
     /// <summary>
