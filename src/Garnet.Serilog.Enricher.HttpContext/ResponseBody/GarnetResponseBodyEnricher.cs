@@ -27,8 +27,17 @@ public class GarnetResponseBodyEnricher : GarnetHttpContextEnricherBaseWithCache
     /// <returns>Response body object or null if request has no body or response body is not available at time of calling this method</returns>
     protected override object ProvideLogObject(Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
-        return httpContext.Items.TryGetValue(GarnetHttpLoggingSink<object>.ResponseBodyCacheKey, out var value)
-            ? Configuration.Redactions.Aggregate(value?.ToString(), (s, redaction) => redaction.Redact(s, httpContext))
-            : null;
+        if (!httpContext.Items.TryGetValue(GarnetHttpLoggingSink<object>.ResponseBodyCacheKey, out var value))
+        {
+            return null;
+        }
+        
+        if (Configuration.Redactions is not null && Configuration.Redactions.Count > 0)
+        {
+            return Configuration.Redactions.Aggregate(value?.ToString(),
+                (s, redaction) => redaction.Redact(s, httpContext));
+        }
+
+        return value;
     }
 }
