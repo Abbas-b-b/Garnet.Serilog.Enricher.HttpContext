@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http.Extensions;
 
@@ -31,7 +32,7 @@ public class Redaction
     /// </summary>
     /// <param name="content">Content to redact <see cref="Fields"/></param>
     /// <param name="httpContext">To verify <see cref="Url"/> against</param>
-    /// <returns><param name="content"> after redaction</param></returns>
+    /// <returns><paramref name="content"/> after redaction</returns>
     internal string Redact(string content, Microsoft.AspNetCore.Http.HttpContext httpContext)
     {
         if (Fields == null
@@ -65,5 +66,25 @@ public class Redaction
         }
 
         return content;
+    }
+
+    internal Dictionary<string, string> Redact(Dictionary<string, string> dictionaryData, Microsoft.AspNetCore.Http.HttpContext httpContext)
+    {
+        if (Fields == null
+            || Fields.Count == 0
+            || dictionaryData == null 
+            || dictionaryData.Count == 0
+            || !(string.IsNullOrWhiteSpace(Url)
+                 || httpContext.Request.GetDisplayUrl().Contains(Url, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return dictionaryData;
+        }
+
+        foreach (var field in Fields.Where(dictionaryData.ContainsKey))
+        {
+            dictionaryData[field] = ReplacementValue;
+        }
+        
+        return dictionaryData;
     }
 }

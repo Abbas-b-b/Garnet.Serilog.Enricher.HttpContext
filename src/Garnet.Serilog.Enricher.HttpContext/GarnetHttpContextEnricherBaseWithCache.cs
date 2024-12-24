@@ -21,8 +21,10 @@ public abstract class GarnetHttpContextEnricherBaseWithCache : GarnetHttpContext
     /// </summary>
     /// <param name="propertyKey">Log event property name</param>
     /// <param name="httpContextAccessor">To access request HttpContext to retrieve needed information</param>
-    protected GarnetHttpContextEnricherBaseWithCache(string propertyKey, IHttpContextAccessor httpContextAccessor)
-        : base(propertyKey, httpContextAccessor)
+    /// <param name="supportsRedaction">Controls whether this enricher supports redaction</param>
+    protected GarnetHttpContextEnricherBaseWithCache(string propertyKey, IHttpContextAccessor httpContextAccessor,
+        bool supportsRedaction = true)
+        : base(propertyKey, httpContextAccessor, supportsRedaction)
     {
     }
 

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Garnet.Serilog.Enricher.HttpContext.Configuration;
 using Microsoft.AspNetCore.Http;
 using Serilog.Core;
@@ -24,15 +26,23 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
     protected readonly IHttpContextAccessor HttpContextAccessor;
 
     /// <summary>
+    /// Controls whether this enricher supports redaction
+    /// </summary>
+    protected readonly bool SupportsRedaction;
+
+    /// <summary>
     /// A base class for other enrichers for the sake of simplicity with some boilerplate codes
     /// Without caching LogObject in the same HttpContext, therefore LogObject is request everytime needed.
     /// </summary>
     /// <param name="propertyKey">Log event property name</param>
     /// <param name="httpContextAccessor">To access request HttpContext to retrieve needed information</param>
-    protected GarnetHttpContextEnricherBase(string propertyKey, IHttpContextAccessor httpContextAccessor)
+    /// <param name="supportsRedaction">Controls whether this enricher supports redaction</param>
+    protected GarnetHttpContextEnricherBase(string propertyKey, IHttpContextAccessor httpContextAccessor,
+        bool supportsRedaction = true)
     {
         PropertyKey = propertyKey;
         HttpContextAccessor = httpContextAccessor;
+        SupportsRedaction = supportsRedaction;
     }
 
     /// <summary>
@@ -63,6 +73,21 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
         if (logData is null || logData is string stringData && string.IsNullOrEmpty(stringData))
         {
             return;
+        }
+
+        if (SupportsRedaction && Configuration.Redactions is not null && Configuration.Redactions.Count > 0)
+        {
+            logData = logData switch
+            {
+                string strData =>
+                    Configuration.Redactions.Aggregate(strData, (str, redaction) => redaction.Redact(str, httpContext)),
+
+                Dictionary<string, string> dictionaryData =>
+                    Configuration.Redactions.Aggregate(dictionaryData,
+                        (dictionary, redaction) => redaction.Redact(dictionary, httpContext)),
+
+                _ => logData
+            };
         }
 
         logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData, true));

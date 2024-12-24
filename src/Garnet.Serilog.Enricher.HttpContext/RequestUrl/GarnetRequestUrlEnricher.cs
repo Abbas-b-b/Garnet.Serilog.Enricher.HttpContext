@@ -16,7 +16,7 @@ public class GarnetRequestUrlEnricher : GarnetHttpContextEnricherBaseWithCache
     public GarnetRequestUrlEnricher(
         GarnetHttpContextEnricherPropertyNameConfig garnetHttpContextEnricherPropertyNameConfig,
         IHttpContextAccessor httpContextAccessor)
-        : base(garnetHttpContextEnricherPropertyNameConfig.RequestUrl, httpContextAccessor)
+        : base(garnetHttpContextEnricherPropertyNameConfig.RequestUrl, httpContextAccessor, false)
     {
     }
 
