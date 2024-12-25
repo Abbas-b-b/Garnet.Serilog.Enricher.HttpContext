@@ -68,26 +68,11 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
             return;
         }
 
-        var logData = ProvideLogObject(httpContext);
+        var logData = ProvideLogObjectAndRedact(httpContext);
 
         if (logData is null || logData is string stringData && string.IsNullOrEmpty(stringData))
         {
             return;
-        }
-
-        if (SupportsRedaction && Configuration.Redactions is not null && Configuration.Redactions.Count > 0)
-        {
-            logData = logData switch
-            {
-                string strData =>
-                    Configuration.Redactions.Aggregate(strData, (str, redaction) => redaction.Redact(str, httpContext)),
-
-                Dictionary<string, string> dictionaryData =>
-                    Configuration.Redactions.Aggregate(dictionaryData,
-                        (dictionary, redaction) => redaction.Redact(dictionary, httpContext)),
-
-                _ => logData
-            };
         }
 
         logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(PropertyKey, logData, true));
@@ -115,4 +100,37 @@ public abstract class GarnetHttpContextEnricherBase : ILogEventEnricher
     /// <param name="httpContext">Current request context</param>
     /// <returns>Any object that wished to enrich LogEvent</returns>
     protected abstract object ProvideLogObject(Microsoft.AspNetCore.Http.HttpContext httpContext);
+
+    /// <summary>
+    /// This is called by <see cref="Enrich"/> to get log object to enrich LogEvent after applying the redactions (<see cref="ProvideLogObject"/>).
+    /// This method won't get called if HttpContext is null
+    /// </summary>
+    /// <param name="httpContext">Current request context</param>
+    /// <returns>Any object that wished to enrich LogEvent</returns>
+    protected virtual object ProvideLogObjectAndRedact(Microsoft.AspNetCore.Http.HttpContext httpContext)
+    {
+        var logData = ProvideLogObject(httpContext);
+
+        if (logData is null)
+        {
+            return null;
+        }
+        
+        if (SupportsRedaction && Configuration.Redactions is not null && Configuration.Redactions.Count > 0)
+        {
+            logData = logData switch
+            {
+                string strData =>
+                    Configuration.Redactions.Aggregate(strData, (str, redaction) => redaction.Redact(str, httpContext)),
+
+                Dictionary<string, string> dictionaryData =>
+                    Configuration.Redactions.Aggregate(dictionaryData,
+                        (dictionary, redaction) => redaction.Redact(dictionary, httpContext)),
+
+                _ => logData
+            };
+        }
+
+        return logData;
+    }
 }

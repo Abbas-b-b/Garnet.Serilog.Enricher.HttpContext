@@ -51,7 +51,7 @@ public abstract class GarnetHttpContextEnricherBaseWithCache : GarnetHttpContext
                 return;
             }
             
-            logData = ProvideLogObject(httpContext);
+            logData = ProvideLogObjectAndRedact(httpContext);
 
             if (logData is null || logData is string stringData && string.IsNullOrEmpty(stringData))
             {
